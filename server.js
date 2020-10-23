@@ -20,12 +20,36 @@ async function loadMainPrompts() {
            choices: [
                {
                    name: 'View All Employees',
-                   value: 'VIEW_EMPLOYEES'
+                   value: 'GET_EMPLOYEES'
                }
            ]
        } 
     ])
+
+    // Switch cases to call functions
+    switch (choice) {
+        case 'GET_EMPLOYEES':
+            return getAllEmployees();
+    }
 };
+
+// View all Employees
+async function getAllEmployees() {
+    connection.query(
+        'SELECT * FROM employees',
+        function(err, results, fields) {
+        console.table(employees); // results contains rows returned by server
+        console.log(fields); // fields contains extra meta data about results, if available
+        }
+    )
+};
+
+// // View all Employees
+// async function getAllEmployees() {
+//     const employees = await db.getAllEmployees();
+//     console.table(employees);
+//     loadMainPrompts();
+// }
 
 // Start server after DB connection
 db.connect( (err) => {
