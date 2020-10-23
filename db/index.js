@@ -1,15 +1,15 @@
-const connection = require("./database");
+// const connection = require("./database");
 
-class DB {
-    consturctor(connection){
-        this.connection = connection;
-    }
-    // View All Employess
-    getAllEmployes() {
-        return this.connection.query(
-            `SELECT * FROM employees`
-        )
-    }
-};
+// class DB {
+//     consturctor(connection){
+//         this.connection = connection;
+//     }
+//     // View All Employess
+//     getAllEmployes() {
+//         return this.connection.query(
+//             `SELECT * FROM employees`
+//         )
+//     }
+// };
 
-module.exports = new DB(connection);
+// module.exports = new DB(connection);

@@ -1,7 +1,22 @@
-const db = require('./db/database');
+const mysql = require('mysql2');
+const util = require('util');
 const { prompt } = require('inquirer');
-const cTable = require('console.table');
-const connection = require('./db/database');
+require("console.table");
+
+// Connnect to database
+const connection = mysql.createConnection({
+    host: 'localhost',
+    user: 'root',
+    password: 'password',
+    database: 'employee_db'
+});
+
+connection.connect(err => {
+    if (err) throw err;
+    console.log('Made connection');
+});
+  
+connection.query = util.promisify(connection.query);
 
 init();
 
@@ -38,21 +53,11 @@ async function getAllEmployees() {
     connection.query(
         'SELECT * FROM employees',
         function(err, results, fields) {
-        console.table(employees); // results contains rows returned by server
-        console.log(fields); // fields contains extra meta data about results, if available
+            console.table(results); 
+            console.log(fields);
         }
     )
 };
 
-// // View all Employees
-// async function getAllEmployees() {
-//     const employees = await db.getAllEmployees();
-//     console.table(employees);
-//     loadMainPrompts();
-// }
 
-// Start server after DB connection
-db.connect( (err) => {
-    console.log(`Made connection`);
-});
 
