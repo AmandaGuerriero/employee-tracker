@@ -56,6 +56,10 @@ async function loadMainPrompts() {
                 {
                     name: 'Add an Employee',
                     value: 'ADD_EMPLOYEE'
+                },
+                {
+                    name: "I'm done",
+                    value: 'DONE'
                 }
            ]
        },
@@ -76,6 +80,8 @@ async function loadMainPrompts() {
             return addRole();
         case 'ADD_EMPLOYEE':
             return addEmployee();
+        case 'DONE':
+            return exitConnection();
     }
 };
 
@@ -270,6 +276,9 @@ async function addEmployee() {
     })
 };
 
-
+// Exit when user is done
+function exitConnection() {
+    connection.end();
+}
 
 
