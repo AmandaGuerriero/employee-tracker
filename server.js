@@ -52,6 +52,10 @@ async function loadMainPrompts() {
                 {
                     name: 'Add a Role',
                     value: 'ADD_ROLE'
+                },
+                {
+                    name: 'Add an Employee',
+                    value: 'ADD_EMPLOYEE'
                 }
            ]
        },
@@ -70,6 +74,8 @@ async function loadMainPrompts() {
             return addDepartment();
         case 'ADD_ROLE':
             return addRole();
+        case 'ADD_EMPLOYEE':
+            return addEmployee();
     }
 };
 
@@ -174,6 +180,92 @@ async function addRole() {
         function(err, results) {
             console.log (answer.roleTitle + " was added!")
             getAllRoles();
+        })
+    })
+};
+
+// Add an Employee
+async function addEmployee() {
+    connection.query("SELECT * FROM roles", function (err, res) {
+        if (err) throw err;
+        // .then(([roles, managers]) => {
+            prompt([
+            {
+                type: "input",
+                message: "What is this new employee's first name?",
+                name: "employeeFirst",
+                validate: answer => {
+                    if (answer !== '') {
+                        return true;
+                    } 
+                    return ('You must enter a first name for this employee!');
+                }
+            },
+            {
+                type: "input",
+                message: "What is this new employee's last name?",
+                name: "employeeLast",
+                validate: answer => {
+                    if (answer !== '') {
+                        return true;
+                    } 
+                    return ('You must enter a last name for this employee!');
+                }
+            },
+            {
+                type: "list",
+                message: "What is this new employee's role?",
+                name: "employeeRole",
+                choices: function() {
+                    var roleArr = [];
+                    for (let i = 0; i < res.length; i++) {
+                        roleArr.push(res[i].title);
+                    }
+                    return roleArr;
+                },
+            }
+            // {
+            //     type: "list",
+            //     message: "Who is the new employee's manager?",
+            //     name: "employeeManager",
+            //     choices: function() {
+            //         var managerArr = [];
+            //         for (let i = 0; i < res.length; i++) {
+            //             managerArr.push(res[i].title);
+            //         }
+            //         return managerArr;
+            //     },
+            // }
+        ])
+        .then(function(answer){
+            let roleId;
+            // let managerId = null;
+
+            for (i = 0; i < res.length; i++) {
+                if (answer.employeeRole == res[i].title){
+                    roleId = res[i].id;
+                }
+            }
+            // for (i = 0; i < managers.length; i++) {
+            //     if (answer.employeeManager == managers[i].Manager){
+            //         managerId = managers[i].id;
+            //     }
+            // }
+            
+
+        // Add the employee
+        connection.query(
+            "INSERT INTO employees SET ?",
+            {
+                first_name: answer.employeeFirst,
+                last_name: answer.employeeFirst,
+                role_id: roleId,
+            },
+            function (err) {
+                if (err) throw err;
+                console.log("A new employee was added");
+                getAllEmployees();
+            })
         })
     })
 };
