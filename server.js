@@ -1,3 +1,4 @@
+const db = require('./db');
 const mysql = require('mysql2');
 const util = require('util');
 const { prompt } = require('inquirer');
@@ -8,7 +9,7 @@ const connection = mysql.createConnection({
     host: 'localhost',
     user: 'root',
     password: 'password',
-    database: 'employee_db'
+    database: 'employees_db'
 });
 
 connection.connect(err => {
@@ -54,7 +55,7 @@ async function getAllEmployees() {
         'SELECT * FROM employees',
         function(err, results, fields) {
             console.table(results); 
-            console.log(fields);
+            // console.log(fields);
         }
     )
 };
