@@ -52,7 +52,7 @@ async function loadMainPrompts() {
 // View all Employees
 async function getAllEmployees() {
     connection.query(
-        'SELECT employees.id, first_name AS "First Name", last_name AS "Last Name", roles.title AS "title", roles.salary AS "salary" FROM employees LEFT JOIN roles ON roles.id = role_id',
+        'SELECT employees.id AS "Employeed ID", first_name AS "First Name", last_name AS "Last Name", roles.title AS "Title", roles.salary AS "Salary", departments.name AS "Department" FROM employees LEFT JOIN roles ON roles.id = role_id LEFT JOIN departments ON departments.id = department_id',
         function(err, results, fields) {
             console.table(results); 
             // console.log(fields);
