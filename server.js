@@ -49,6 +49,10 @@ async function loadMainPrompts() {
                     name: 'Add a Department',
                     value: 'ADD_DEPARTMENT'
                 },
+                {
+                    name: 'Add a Role',
+                    value: 'ADD_ROLE'
+                }
            ]
        },
        
@@ -64,6 +68,8 @@ async function loadMainPrompts() {
             return getAllEmployees();
         case 'ADD_DEPARTMENT':
             return addDepartment();
+        case 'ADD_ROLE':
+            return addRole();
     }
 };
 
@@ -114,6 +120,60 @@ async function addDepartment() {
         function(err, results) {
             console.table(results); 
             loadMainPrompts();
+        })
+    })
+};
+
+// Add a Role
+async function addRole() {
+    prompt([
+        {
+            type: "input",
+            message: "What is this new role's title?",
+            name: "roleTitle",
+            validate: answer => {
+                if (answer !== '') {
+                    return true;
+                } 
+                return ('You must enter a title for this role!');
+            }
+        },
+        {
+            type: "input",
+            message: "What is this new role's salary?",
+            name: "roleSalary",
+            validate: answer => {
+                const pass = answer.match(
+                    /[1-9]/                
+                );
+                if (pass) {
+                    return true;
+                }
+                return ('You need to input a number')
+            }
+        },
+        {
+            type: "input",
+            message: "What department id for this role?",
+            name: "roleDepartment",
+            validate: answer => {
+                const pass = answer.match(
+                    /[1-9]/                
+                );
+                if (pass) {
+                    return true;
+                }
+                return ('You need to input the number of the department')
+            }
+        }
+    ])
+    .then(function(answer){
+    connection.query(
+        'INSERT INTO roles (title, salary, department_id) VALUES (?, ?, ?)', 
+        [answer.roleTitle, answer.roleSalary, answer.roleDepartment],
+        function(err, results) {
+            console.log (answer.roleTitle + " was added!")
+            getAllRoles();
         })
     })
 };
