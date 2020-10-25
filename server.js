@@ -52,8 +52,19 @@ function selectRole() {
 //         return managersArr;
 // }
 
-// Load Questions
+var managerArr = [];
+function selectManager() {
+  connection.query("SELECT employees.first_name, employees.last_name, employees.id FROM employees WHERE manager_id IS NULL", function(err, res) {
+    if (err) throw err
+    for (var i = 0; i < res.length; i++) {
+        managerArr.push({name: res[i].last_name + ", " + res[i].first_name, value: res[i].id});
+    }
 
+  })
+  return managerArr;
+};
+
+// Load Questions
 async function loadMainPrompts() {
     const { choice } = await prompt([
        {
@@ -308,31 +319,18 @@ async function addEmployee() {
                 type: "list",
                 message: "What is the ID of the new employee's manager?",
                 name: "employeeManager",
-                choices: [1, 2, 3]
+                choices: selectManager()
             }
         ])
         .then(function(answer){
-            let roleId;
-
-            for (i = 0; i < res.length; i++) {
-                if (answer.employeeRole == res[i].title){
-                    roleId = res[i].id;
-                }
-            }
-            // let managerId;
-            // for (i = 0; i < res.length; i++) {
-            //     if (answer.employeeManager == res[i].id){
-            //         managerId = res[i].id;
-            //     }
-            // }
-
+ 
         // Add the employee
         connection.query(
             "INSERT INTO employees SET ?",
             {
                 first_name: answer.employeeFirst,
-                last_name: answer.employeeFirst,
-                role_id: roleId,
+                last_name: answer.employeeLast,
+                role_id: answer.employeeRole,
                 manager_id: answer.employeeManager
             },
             function (err) {
