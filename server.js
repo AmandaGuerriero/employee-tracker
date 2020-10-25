@@ -76,6 +76,18 @@ async function loadMainPrompts() {
                     value: 'UPDATE_ROLE'
                 },
                 {
+                    name: 'Remove a Department',
+                    value: 'REMOVE_DEPARTMENT'
+                },
+                {
+                    name: 'Remove a Role',
+                    value: 'REMOVE_ROLE'
+                },
+                {
+                    name: 'Remove an Employee',
+                    value: 'REMOVE_EMPLOYEE'
+                },
+                {
                     name: "I'm done",
                     value: 'DONE'
                 }
@@ -100,6 +112,12 @@ async function loadMainPrompts() {
             return addEmployee();
         case 'UPDATE_ROLE':
             return updateRole();
+        case 'REMOVE_DEPARTMENT':
+            return removeDepartment();
+        case 'REMOVE_ROLE':
+            return removeRole();
+        case 'REMOVE_EMPLOYEE':
+            return removeEmployee();
         case 'DONE':
             return exitConnection();
     }
@@ -325,6 +343,65 @@ async function updateRole() {
     })
 };
 
+// Remove Department
+async function removeDepartment() {
+    connection.query(
+        `DELETE FROM departments where ?;`,
+        function(err, results, fields) {
+            prompt([
+                {
+                    type: 'input',
+                    name: 'removeDep',
+                    message: 'Input the Department Id to remove it'
+                }
+            ])
+            .then((answer) => {
+                connection.query(`DELETE FROM departments where ?`, { id: answer.removeDep })
+                loadMainPrompts();
+        }
+            )}
+    )
+};
+
+// Remove Role
+async function removeRole() {
+    connection.query(
+        `DELETE FROM roles where ?;`,
+        function(err, results, fields) {
+            prompt([
+                {
+                    type: 'input',
+                    name: 'removeRole',
+                    message: 'Input the Role Id to remove it'
+                }
+            ])
+            .then((answer) => {
+                connection.query(`DELETE FROM roles where ?`, { id: answer.removeRole })
+                loadMainPrompts();
+        }
+            )}
+    )
+};
+
+// Remove Employee
+async function removeEmployee() {
+    connection.query(
+        `DELETE FROM employees where ?;`,
+        function(err, results, fields) {
+            prompt([
+                {
+                    type: 'input',
+                    name: 'removeEmp',
+                    message: 'Input the Employee Id to remove them'
+                }
+            ])
+            .then((answer) => {
+                connection.query(`DELETE FROM employees where ?`, { id: answer.removeEmp })
+                loadMainPrompts();
+        }
+            )}
+    )
+};
 
 // Exit when user is done
 function exitConnection() {
