@@ -32,14 +32,28 @@ function selectRole() {
   connection.query("SELECT * FROM roles", function(err, res) {
     if (err) throw err
     for (var i = 0; i < res.length; i++) {
-      roleArr.push(res[i].title);
+      roleArr.push({name: res[i].title, value: res[i].id});
     }
 
   })
   return roleArr;
 };
 
+// Managers Array
+// var managersArr = [];
+//     function managerChoices() {
+//     connection.query("SELECT first_name, last_name FROM employees WHERE manager_id IS NULL", function(err, res) {
+//         if (err) throw err
+//         for (var i = 0; i < res.length; i++) {
+//             managersArr.push(res[i].first_name);
+//         }
+
+//         })
+//         return managersArr;
+// }
+
 // Load Questions
+
 async function loadMainPrompts() {
     const { choice } = await prompt([
        {
@@ -132,7 +146,7 @@ async function loadMainPrompts() {
 // View all Departments
 async function getAllDepartments() {
     connection.query(
-        'SELECT departments.id AS "Department ID", name AS "Department Name" FROM departments',
+        'SELECT departments.id AS "Department ID", name AS "Department Name" FROM departments ORDER BY departments.id ASC;',
         function(err, results, fields) {
             console.table(results); 
             loadMainPrompts();
@@ -143,7 +157,7 @@ async function getAllDepartments() {
 // View all Roles
 async function getAllRoles() {
     connection.query(
-        'SELECT roles.id AS "Role ID", title AS "Job Title", salary AS "Salary", departments.name AS "Department Name" FROM roles LEFT JOIN departments ON roles.department_id = departments.id',
+        'SELECT title AS "Job Title", roles.id AS "Role ID", departments.name AS "Department Name", salary AS "Salary" FROM roles LEFT JOIN departments ON roles.department_id = departments.id ORDER BY roles.id ASC',
         function(err, results, fields) {
             console.table(results); 
             loadMainPrompts();
@@ -154,7 +168,7 @@ async function getAllRoles() {
 // View all Employees
 async function getAllEmployees() {
     connection.query(
-        `SELECT employees.id AS "Employee ID", employees.first_name AS "First Name", employees.last_name AS "Last Name", roles.title AS Title, roles.salary AS Salary, CONCAT(manager.first_name,' ', manager.last_name) AS Manager FROM employees LEFT JOIN roles on employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees manager ON manager.id = employees.manager_id;`,
+        `SELECT employees.id AS "Employee ID", employees.first_name AS "First Name", employees.last_name AS "Last Name", roles.title AS Title, departments.name AS Department, roles.salary AS Salary, CONCAT(manager.first_name,' ', manager.last_name) AS Manager FROM employees LEFT JOIN roles on employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees manager ON manager.id = employees.manager_id;`,
         function(err, results, fields) {
             console.table(results); 
             loadMainPrompts();
@@ -197,8 +211,8 @@ async function addDepartment() {
         'INSERT INTO departments (name) VALUES (?)', 
         [answer.departmentName],
         function(err, results) {
-            console.table(results); 
-            loadMainPrompts();
+            console.log (answer.departmentName + " was added!")
+            getAllDepartments();
         })
     })
 };
@@ -233,7 +247,7 @@ async function addRole() {
         },
         {
             type: "input",
-            message: "What department id for this role?",
+            message: "What is the Department id for this role?",
             name: "roleDepartment",
             validate: answer => {
                 const pass = answer.match(
@@ -259,17 +273,6 @@ async function addRole() {
 
 // Add an Employee
 async function addEmployee() {
-    var managersArr = [];
-    function managerChoices() {
-    connection.query("SELECT first_name, last_name FROM employees WHERE manager_id IS NULL", function(err, res) {
-        if (err) throw err
-        for (var i = 0; i < res.length; i++) {
-            managersArr.push(res[i].first_name);
-        }
-
-        })
-        return managersArr;
-    }
     connection.query("SELECT * FROM roles", function (err, res) {
         if (err) throw err;
             prompt([
@@ -316,7 +319,12 @@ async function addEmployee() {
                     roleId = res[i].id;
                 }
             }
-            
+            // let managerId;
+            // for (i = 0; i < res.length; i++) {
+            //     if (answer.employeeManager == res[i].id){
+            //         managerId = res[i].id;
+            //     }
+            // }
 
         // Add the employee
         connection.query(
@@ -338,20 +346,18 @@ async function addEmployee() {
 
 // Update an employee's role
 async function updateRole() {
-    connection.query('SELECT employees.first_name, employees.last_name, roles.title FROM employees JOIN roles ON employees.role_id = roles.id;', function(err, res) {
+    connection.query('SELECT employees.first_name, employees.last_name, employees.id, roles.title FROM employees JOIN roles ON employees.role_id = roles.id;', function(err, res) {
      if (err) throw err
+     var employeeArr = [];
+     for (var i = 0; i < res.length; i++) {
+        employeeArr.push({name: res[i].last_name + ", " + res[i].first_name, value: res[i].id});
+      }
      prompt([
           {
             type: "list",
-            name: "employeeLast",
-            message: "What is the Employee's last name? ",
-            choices: function() {
-              var employeeLast = [];
-              for (var i = 0; i < res.length; i++) {
-                employeeLast.push(res[i].last_name);
-              }
-              return employeeLast;
-            },
+            name: "employeeId",
+            message: "What is the Id for the Employee? ",
+            choices: employeeArr
           },
           {
             type: "list",
@@ -360,11 +366,10 @@ async function updateRole() {
             choices: selectRole()
           },
       ]).then(function(answer) {
-        console.log ("I'm called")
 
-        connection.query(`UPDATE employees SET role_id = ${answer.newRole} WHERE last_name = ${answer.employeeLast}`, (err, res) => {
-            if(err) return err;
-            loadMainPrompts();
+        connection.query(`UPDATE employees SET role_id = ${answer.newRole} WHERE id = ${answer.employeeId}`, (err, res) => {
+            getAllEmployees();
+            if (err) return err;
         });
     })
     })
