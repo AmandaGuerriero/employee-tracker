@@ -25,6 +25,20 @@ function init() {
     loadMainPrompts();
 }
 
+// Global Arrays
+// Roles Array
+var roleArr = [];
+function selectRole() {
+  connection.query("SELECT * FROM roles", function(err, res) {
+    if (err) throw err
+    for (var i = 0; i < res.length; i++) {
+      roleArr.push(res[i].title);
+    }
+
+  })
+  return roleArr;
+};
+
 // Load Questions
 async function loadMainPrompts() {
     const { choice } = await prompt([
@@ -58,6 +72,10 @@ async function loadMainPrompts() {
                     value: 'ADD_EMPLOYEE'
                 },
                 {
+                    name: 'Update role for an Employee',
+                    value: 'UPDATE_ROLE'
+                },
+                {
                     name: "I'm done",
                     value: 'DONE'
                 }
@@ -80,6 +98,8 @@ async function loadMainPrompts() {
             return addRole();
         case 'ADD_EMPLOYEE':
             return addEmployee();
+        case 'UPDATE_ROLE':
+            return updateRole();
         case 'DONE':
             return exitConnection();
     }
@@ -110,7 +130,7 @@ async function getAllRoles() {
 // View all Employees
 async function getAllEmployees() {
     connection.query(
-        'SELECT employees.id AS "Employeed ID", first_name AS "First Name", last_name AS "Last Name", roles.title AS "Title", roles.salary AS "Salary", departments.name AS "Department" FROM employees LEFT JOIN roles ON roles.id = role_id LEFT JOIN departments ON departments.id = department_id',
+        `SELECT employees.id AS "Employee ID", employees.first_name AS "First Name", employees.last_name AS "Last Name", roles.title AS Title, roles.salary AS Salary, CONCAT(manager.first_name,' ', manager.last_name) AS Manager FROM employees LEFT JOIN roles on employees.role_id = roles.id LEFT JOIN departments ON roles.department_id = departments.id LEFT JOIN employees manager ON manager.id = employees.manager_id;`,
         function(err, results, fields) {
             console.table(results); 
             loadMainPrompts();
@@ -205,7 +225,6 @@ async function addEmployee() {
     }
     connection.query("SELECT * FROM roles", function (err, res) {
         if (err) throw err;
-        // .then(([roles, managers]) => {
             prompt([
             {
                 type: "input",
@@ -233,13 +252,7 @@ async function addEmployee() {
                 type: "list",
                 message: "What is this new employee's role?",
                 name: "employeeRole",
-                choices: function() {
-                    var roleArr = [];
-                    for (let i = 0; i < res.length; i++) {
-                        roleArr.push(res[i].title);
-                    }
-                    return roleArr;
-                },
+                choices: selectRole()
             },
             {
                 type: "list",
@@ -276,10 +289,51 @@ async function addEmployee() {
     })
 };
 
+// Update an employee's role
+async function updateRole() {
+    connection.query('SELECT employees.first_name, employees.last_name, roles.title FROM employees JOIN roles ON employees.role_id = roles.id;', function(err, res) {
+     if (err) throw err
+     prompt([
+          {
+            name: "employeeLast",
+            type: "list",
+            message: "What is the Employee's last name? ",
+            choices: function() {
+              var employeeLast = [];
+              for (var i = 0; i < res.length; i++) {
+                employeeLast.push(res[i].last_name);
+              }
+              return employeeLast;
+            },
+          },
+          {
+            name: "newRole",
+            type: "list",
+            message: "What is the new role of the Employee? ",
+            choices: selectRole()
+          },
+      ]).then(function(answer) {
+        console.log ("I'm called")
+        let employeeId = answer.employeeLast;
+        // update employee with new role
+        connection.query(`UPDATE employees SET role_id = ${roleId} WHERE last_name = ${employeeId}`, (err, res) => {
+            if(err) return err;
+
+            // confirm update employee
+            console.log(`\n ${answer.employeeLast} ROLE UPDATED TO ${answer.newRole}...\n `);
+
+            // back to main menu
+            loadMainPrompts();
+        });
+    })
+    })
+};
+
+
 // Exit when user is done
 function exitConnection() {
     console.log("Exiting...thank you!")
     connection.end();
-}
+};
 
 
