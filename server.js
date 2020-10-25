@@ -39,19 +39,6 @@ function selectRole() {
   return roleArr;
 };
 
-// Managers Array
-// var managersArr = [];
-//     function managerChoices() {
-//     connection.query("SELECT first_name, last_name FROM employees WHERE manager_id IS NULL", function(err, res) {
-//         if (err) throw err
-//         for (var i = 0; i < res.length; i++) {
-//             managersArr.push(res[i].first_name);
-//         }
-
-//         })
-//         return managersArr;
-// }
-
 var managerArr = [];
 function selectManager() {
   connection.query("SELECT employees.first_name, employees.last_name, employees.id FROM employees WHERE manager_id IS NULL", function(err, res) {
