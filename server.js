@@ -295,8 +295,8 @@ async function updateRole() {
      if (err) throw err
      prompt([
           {
-            name: "employeeLast",
             type: "list",
+            name: "employeeLast",
             message: "What is the Employee's last name? ",
             choices: function() {
               var employeeLast = [];
@@ -307,22 +307,18 @@ async function updateRole() {
             },
           },
           {
-            name: "newRole",
             type: "list",
+            name: "newRole",
             message: "What is the new role of the Employee? ",
             choices: selectRole()
           },
       ]).then(function(answer) {
         console.log ("I'm called")
-        let employeeId = answer.employeeLast;
-        // update employee with new role
-        connection.query(`UPDATE employees SET role_id = ${roleId} WHERE last_name = ${employeeId}`, (err, res) => {
+        let employeeLast = answer.employeeLast;
+        let roleId = answer.newRole;
+
+        connection.query(`UPDATE employees SET role_id = ${roleId} WHERE last_name = ${employeeLast}`, (err, res) => {
             if(err) return err;
-
-            // confirm update employee
-            console.log(`\n ${answer.employeeLast} ROLE UPDATED TO ${answer.newRole}...\n `);
-
-            // back to main menu
             loadMainPrompts();
         });
     })
