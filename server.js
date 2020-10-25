@@ -192,6 +192,17 @@ async function addRole() {
 
 // Add an Employee
 async function addEmployee() {
+    var managersArr = [];
+    function managerChoices() {
+    connection.query("SELECT first_name, last_name FROM employees WHERE manager_id IS NULL", function(err, res) {
+        if (err) throw err
+        for (var i = 0; i < res.length; i++) {
+            managersArr.push(res[i].first_name);
+        }
+
+        })
+        return managersArr;
+    }
     connection.query("SELECT * FROM roles", function (err, res) {
         if (err) throw err;
         // .then(([roles, managers]) => {
@@ -229,34 +240,22 @@ async function addEmployee() {
                     }
                     return roleArr;
                 },
+            },
+            {
+                type: "list",
+                message: "What is the ID of the new employee's manager?",
+                name: "employeeManager",
+                choices: [1, 2, 3]
             }
-            // {
-            //     type: "list",
-            //     message: "Who is the new employee's manager?",
-            //     name: "employeeManager",
-            //     choices: function() {
-            //         var managerArr = [];
-            //         for (let i = 0; i < res.length; i++) {
-            //             managerArr.push(res[i].title);
-            //         }
-            //         return managerArr;
-            //     },
-            // }
         ])
         .then(function(answer){
             let roleId;
-            // let managerId = null;
 
             for (i = 0; i < res.length; i++) {
                 if (answer.employeeRole == res[i].title){
                     roleId = res[i].id;
                 }
             }
-            // for (i = 0; i < managers.length; i++) {
-            //     if (answer.employeeManager == managers[i].Manager){
-            //         managerId = managers[i].id;
-            //     }
-            // }
             
 
         // Add the employee
@@ -266,10 +265,11 @@ async function addEmployee() {
                 first_name: answer.employeeFirst,
                 last_name: answer.employeeFirst,
                 role_id: roleId,
+                manager_id: answer.employeeManager
             },
             function (err) {
                 if (err) throw err;
-                console.log("A new employee was added");
+                console.log("A new employee was added!");
                 getAllEmployees();
             })
         })
@@ -278,6 +278,7 @@ async function addEmployee() {
 
 // Exit when user is done
 function exitConnection() {
+    console.log("Exiting...thank you!")
     connection.end();
 }
 
