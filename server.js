@@ -60,6 +60,10 @@ async function loadMainPrompts() {
                     value: 'GET_EMPLOYEES'
                 },
                 {
+                    name: 'Get Employees By Role',
+                    value: 'GET_BY_ROLE'
+                },
+                {
                     name: 'Add a Department',
                     value: 'ADD_DEPARTMENT'
                 },
@@ -104,6 +108,8 @@ async function loadMainPrompts() {
             return getAllRoles();
         case 'GET_EMPLOYEES':
             return getAllEmployees();
+        case 'GET_BY_ROLE':
+            return getEmployeesByRole();
         case 'ADD_DEPARTMENT':
             return addDepartment();
         case 'ADD_ROLE':
@@ -154,6 +160,29 @@ async function getAllEmployees() {
             loadMainPrompts();
         }
     )
+};
+
+// Get Employees By Role
+function getEmployeesByRole(){
+    connection.query("SELECT * FROM roles", function (err, res) {
+        if (err) throw err;
+        prompt({
+            name: "getRole",
+            type: "list",
+            message: "Select the role to display employees",
+            choices: selectRole()
+        })    
+        .then((answer) => {
+
+            const query = `SELECT employees.id AS ID, employees.first_name AS 'First Name', employees.last_name AS 'Last Name', roles.title AS Title, departments.name AS Department, roles.salary AS Salary, concat(m.first_name, ' ' ,  m.last_name) AS Manager FROM employees e LEFT JOIN employees m ON e.manager_id = m.id INNER JOIN roles ON employees.role_id = roles.id INNER JOIN departments ON roles.department_id = departments.id WHERE roles.title = '${answer.getRole}' ORDER BY ID ASC`;
+            connection.query(query, (err, res) => {
+                if(err) return err;
+                // show results using console.table
+                console.log("Done");
+                loadMainPrompts();
+            });
+        })
+    })
 };
 
 // Add Department
@@ -332,10 +361,8 @@ async function updateRole() {
           },
       ]).then(function(answer) {
         console.log ("I'm called")
-        let employeeLast = answer.employeeLast;
-        let roleId = answer.newRole;
 
-        connection.query(`UPDATE employees SET role_id = ${roleId} WHERE last_name = ${employeeLast}`, (err, res) => {
+        connection.query(`UPDATE employees SET role_id = ${answer.newRole} WHERE last_name = ${answer.employeeLast}`, (err, res) => {
             if(err) return err;
             loadMainPrompts();
         });
