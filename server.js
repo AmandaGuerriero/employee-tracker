@@ -72,10 +72,6 @@ async function loadMainPrompts() {
                     value: 'GET_EMPLOYEES'
                 },
                 {
-                    name: 'Get Employees By Role',
-                    value: 'GET_BY_ROLE'
-                },
-                {
                     name: 'Add a Department',
                     value: 'ADD_DEPARTMENT'
                 },
@@ -90,6 +86,10 @@ async function loadMainPrompts() {
                 {
                     name: 'Update role for an Employee',
                     value: 'UPDATE_ROLE'
+                },
+                {
+                    name: 'Update manager for an Employee',
+                    value: 'UPDATE_MANAGER'
                 },
                 {
                     name: 'Remove a Department',
@@ -120,8 +120,6 @@ async function loadMainPrompts() {
             return getAllRoles();
         case 'GET_EMPLOYEES':
             return getAllEmployees();
-        case 'GET_BY_ROLE':
-            return getEmployeesByRole();
         case 'ADD_DEPARTMENT':
             return addDepartment();
         case 'ADD_ROLE':
@@ -130,6 +128,8 @@ async function loadMainPrompts() {
             return addEmployee();
         case 'UPDATE_ROLE':
             return updateRole();
+        case 'UPDATE_MANAGER':
+            return updateManager();
         case 'REMOVE_DEPARTMENT':
             return removeDepartment();
         case 'REMOVE_ROLE':
@@ -172,29 +172,6 @@ async function getAllEmployees() {
             loadMainPrompts();
         }
     )
-};
-
-// Get Employees By Role
-function getEmployeesByRole(){
-    connection.query("SELECT * FROM roles", function (err, res) {
-        if (err) throw err;
-        prompt({
-            name: "getRole",
-            type: "list",
-            message: "Select the role to display employees",
-            choices: selectRole()
-        })    
-        .then((answer) => {
-
-            const query = `SELECT employees.id AS ID, employees.first_name AS 'First Name', employees.last_name AS 'Last Name', roles.title AS Title, departments.name AS Department, roles.salary AS Salary, concat(m.first_name, ' ' ,  m.last_name) AS Manager FROM employees e LEFT JOIN employees m ON e.manager_id = m.id INNER JOIN roles ON employees.role_id = roles.id INNER JOIN departments ON roles.department_id = departments.id WHERE roles.title = '${answer.getRole}' ORDER BY ID ASC`;
-            connection.query(query, (err, res) => {
-                if(err) return err;
-                // show results using console.table
-                console.log("Done");
-                loadMainPrompts();
-            });
-        })
-    })
 };
 
 // Add Department
@@ -341,7 +318,7 @@ async function updateRole() {
           {
             type: "list",
             name: "employeeId",
-            message: "What is the Id for the Employee? ",
+            message: "Which employee's role would you like to change? ",
             choices: employeeArr
           },
           {
@@ -353,6 +330,37 @@ async function updateRole() {
       ]).then(function(answer) {
 
         connection.query(`UPDATE employees SET role_id = ${answer.newRole} WHERE id = ${answer.employeeId}`, (err, res) => {
+            getAllEmployees();
+            if (err) return err;
+        });
+    })
+    })
+};
+
+// Update an employee's manager
+async function updateManager() {
+    connection.query('SELECT employees.first_name, employees.last_name, employees.id, employees.manager_id FROM employees;', function(err, res) {
+     if (err) throw err
+     var employeeArr = [];
+     for (var i = 0; i < res.length; i++) {
+        employeeArr.push({name: res[i].last_name + ", " + res[i].first_name, value: res[i].id});
+      }
+     prompt([
+          {
+            type: "list",
+            name: "employeeId",
+            message: "Which employee's manager should be changed? ",
+            choices: employeeArr
+          },
+          {
+            type: "list",
+            name: "newManager",
+            message: "Who is the new manager for the employee? ",
+            choices: selectManager()
+          },
+      ]).then(function(answer) {
+
+        connection.query(`UPDATE employees SET manager_id = ${answer.newManager} WHERE id = ${answer.employeeId}`, (err, res) => {
             getAllEmployees();
             if (err) return err;
         });
@@ -374,7 +382,8 @@ async function removeDepartment() {
             ])
             .then((answer) => {
                 connection.query(`DELETE FROM departments where ?`, { id: answer.removeDep })
-                loadMainPrompts();
+                console.log ("A department was removed!")
+                getAllDepartments();
         }
             )}
     )
@@ -394,7 +403,8 @@ async function removeRole() {
             ])
             .then((answer) => {
                 connection.query(`DELETE FROM roles where ?`, { id: answer.removeRole })
-                loadMainPrompts();
+                console.log ("A role was removed!")
+                getAllRoles();
         }
             )}
     )
@@ -414,7 +424,8 @@ async function removeEmployee() {
             ])
             .then((answer) => {
                 connection.query(`DELETE FROM employees where ?`, { id: answer.removeEmp })
-                loadMainPrompts();
+                console.log ("An employee was removed!")
+                getAllEmployees();
         }
             )}
     )
